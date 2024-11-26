@@ -1,7 +1,7 @@
 source=java
 target=cs
 lr=1e-4
-batch_size=64
+batch_size=32
 beam_size=10
 source_length=320
 target_length=256

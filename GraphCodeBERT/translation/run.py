@@ -50,6 +50,7 @@ from parser import (remove_comments_and_docstrings,
                    index_to_code_token,
                    tree_to_variable_index)
 from tree_sitter import Language, Parser
+np.bool = np.bool_
 # https://github.com/grantjenks/py-tree-sitter-languages/issues/64
 dfg_function={
     'python':DFG_python,
