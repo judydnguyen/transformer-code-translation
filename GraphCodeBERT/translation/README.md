@@ -142,8 +142,10 @@ C# to Java:
 | GraphCodeBERT  | **72.64** |  **58.8**  |
 
 ## Judy Notes
+- Download data and checkpoint: https://vanderbilt.box.com/s/ohn9emaj0udwp9g4b8tby692lkgb3yb7
 - The [.ipynb](GraphCodeBERT/translation/finetune_codeBERT_code_translation.ipynb) contains the code for fine-tuning and upload model to huggingface
 - Run using bash file
 ```
 chmod +x ./run.sh && ./run.sh
 ```
+- Inference file: [evaluate_codeBERT_code_translation.ipynb](transformer-code-translation/GraphCodeBERT/translation/evaluate_codeBERT_code_translation.ipynb)
