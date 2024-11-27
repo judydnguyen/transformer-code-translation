@@ -72,6 +72,69 @@ for lang in dfg_function:
     parser.set_language(LANGUAGE) 
     parser = [parser,dfg_function[lang]]    
     parsers[lang]= parser
+
+def extract_controlflow(code, parser, lang):
+    """
+    Extract control flow edges (CFG) from the code.
+    """
+    try:
+        # Parse the code to obtain the AST
+        tree = parser[0].parse(bytes(code, 'utf8'))
+        root_node = tree.root_node
+
+        # Extract control flow edges from the AST
+        cfg = extract_control_flow_edges(root_node)
+        return cfg
+    except Exception as e:
+        print(f"Error extracting CFG: {e}")
+        return []
+
+
+def extract_control_flow_edges(root_node):
+    """
+    Extract control flow edges (e.g., branching, loops) from the AST.
+    """
+    edges = []
+
+    def traverse(node):
+        if node.type == "if_statement":
+            # Extract the condition
+            condition_node = next(
+                (child for child in node.children if child.type == "parenthesized_expression"), None
+            )
+            # Extract the "then" block
+            then_node = next(
+                (child for child in node.children if child.type == "block"), None
+            )
+            # Add edges for condition -> then
+            if condition_node and then_node:
+                edges.append((condition_node.start_point, then_node.start_point))
+            # Extract the "else" block, if present
+            else_node = next(
+                (child for child in node.children if child.type == "else_body"), None
+            )
+            if condition_node and else_node:
+                edges.append((condition_node.start_point, else_node.start_point))
+        elif node.type in ("for_statement", "while_statement"):
+            # Extract loop condition and body
+            condition_node = next(
+                (child for child in node.children if child.type == "parenthesized_expression"), None
+            )
+            body_node = next(
+                (child for child in node.children if child.type == "block"), None
+            )
+            if condition_node and body_node:
+                edges.append((condition_node.start_point, body_node.start_point))
+        elif node.type == "return_statement":
+            # Add a return statement as a flow edge
+            edges.append((node.start_point, node.end_point))
+
+        # Recurse for all children
+        for child in node.children:
+            traverse(child)
+
+    traverse(root_node)
+    return edges
     
 #remove comments, tokenize code and extract dataflow     
 def extract_dataflow(code, parser,lang):
@@ -185,6 +248,10 @@ def convert_examples_to_features(examples, tokenizer, args,stage=None):
         code_tokens,dfg=extract_dataflow(example.source,
                                          parsers["c_sharp" if args.source_lang == "cs" else "java"],
                                          "c_sharp" if args.source_lang == "cs" else "java")
+        cfg = extract_controlflow(example.source,
+                                    parsers["c_sharp" if args.source_lang == "cs" else "java"],
+                                    "c_sharp" if args.source_lang == "cs" else "java")
+        
         code_tokens=[tokenizer.tokenize('@ '+x)[1:] if idx!=0 else tokenizer.tokenize(x) for idx,x in enumerate(code_tokens)]
         ori2cur_pos={}
         ori2cur_pos[-1]=(0,0)
@@ -200,7 +267,23 @@ def convert_examples_to_features(examples, tokenizer, args,stage=None):
         dfg=dfg[:args.max_source_length-len(source_tokens)]
         source_tokens+=[x[0] for x in dfg]
         position_idx+=[0 for x in dfg]
+    
         source_ids+=[tokenizer.unk_token_id for x in dfg]
+        # process cfg
+        # Map CFG to token positions
+        cfg_mapped = []
+        for start, end in cfg:
+            if start in ori2cur_pos and end in ori2cur_pos:
+                start_pos = ori2cur_pos[start][0]
+                end_pos = ori2cur_pos[end][1]
+                cfg_mapped.append((start_pos, end_pos))
+
+        # Flatten CFG into the source structure
+        for start_pos, end_pos in cfg_mapped:
+            source_tokens.append("[CFG_EDGE]")
+            position_idx.append(0)
+            source_ids.append(tokenizer.unk_token_id)  # Add an unknown token ID for CFG edge
+            
         padding_length=args.max_source_length-len(source_ids)
         position_idx+=[tokenizer.pad_token_id]*padding_length
         source_ids+=[tokenizer.pad_token_id]*padding_length      
@@ -515,8 +598,9 @@ def main():
                 if not os.path.exists(last_output_dir):
                     os.makedirs(last_output_dir)
                 model_to_save = model.module if hasattr(model, 'module') else model  # Only save the model it-self
-                output_model_file = os.path.join(last_output_dir, "pytorch_model.bin")
-                torch.save(model_to_save.state_dict(), output_model_file)                    
+                output_model_file = os.path.join(last_output_dir, "pytorch_model_ast.bin")
+                torch.save(model_to_save.state_dict(), output_model_file)    
+                                
                 if eval_loss<best_loss:
                     logger.info("  Best ppl:%s",round(np.exp(eval_loss),5))
                     logger.info("  "+"*"*20)
@@ -526,7 +610,7 @@ def main():
                     if not os.path.exists(output_dir):
                         os.makedirs(output_dir)
                     model_to_save = model.module if hasattr(model, 'module') else model  # Only save the model it-self
-                    output_model_file = os.path.join(output_dir, "pytorch_model.bin")
+                    output_model_file = os.path.join(output_dir, "pytorch_model_ast.bin")
                     torch.save(model_to_save.state_dict(), output_model_file)  
 
 
@@ -580,7 +664,7 @@ def main():
                     if not os.path.exists(output_dir):
                         os.makedirs(output_dir)
                     model_to_save = model.module if hasattr(model, 'module') else model  # Only save the model it-self
-                    output_model_file = os.path.join(output_dir, "pytorch_model.bin")
+                    output_model_file = os.path.join(output_dir, f"pytorch_model_Best BLEU+xMatch_{dev_bleu+xmatch}.bin")
                     torch.save(model_to_save.state_dict(), output_model_file)
                
     if args.do_test:
