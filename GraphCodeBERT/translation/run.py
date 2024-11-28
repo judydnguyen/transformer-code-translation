@@ -505,7 +505,7 @@ def main():
         train_features = convert_examples_to_features(train_examples, tokenizer,args,stage='train')
         train_data = TextDataset(train_features,args)
         train_sampler = RandomSampler(train_data)
-        train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=args.train_batch_size//args.gradient_accumulation_steps,num_workers=4)
+        train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=args.train_batch_size//args.gradient_accumulation_steps,num_workers=54)
 
         num_train_optimization_steps =  args.train_steps
 
@@ -567,7 +567,7 @@ def main():
                     eval_data = TextDataset(eval_features,args)
                     dev_dataset['dev_loss']=eval_examples,eval_data
                 eval_sampler = SequentialSampler(eval_data)
-                eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=args.eval_batch_size,num_workers=4)
+                eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=args.eval_batch_size,num_workers=54)
 
                 logger.info("\n***** Running evaluation *****")
                 logger.info("  Num examples = %d", len(eval_examples))
@@ -625,7 +625,7 @@ def main():
                     dev_dataset['dev_bleu']=eval_examples,eval_data
 
                 eval_sampler = SequentialSampler(eval_data)
-                eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=args.eval_batch_size,num_workers=4)
+                eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=args.eval_batch_size,num_workers=54)
                 model.eval() 
                 p=[]
                 for batch in eval_dataloader:
@@ -681,7 +681,7 @@ def main():
 
             # Calculate bleu
             eval_sampler = SequentialSampler(eval_data)
-            eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=args.eval_batch_size,num_workers=4)
+            eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=args.eval_batch_size,num_workers=54)
 
             model.eval() 
             p=[]
