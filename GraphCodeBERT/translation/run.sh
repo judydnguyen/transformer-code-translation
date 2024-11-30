@@ -1,7 +1,7 @@
 source=java
 target=cs
 lr=1e-4
-batch_size=48
+batch_size=24
 beam_size=10
 source_length=320
 target_length=256
@@ -12,7 +12,7 @@ epochs=100
 pretrained_model=microsoft/graphcodebert-base
 
 mkdir -p $output_dir
-python run.py \
+python finetune.py \
 --do_train \
 --do_eval \
 --model_type roberta \
