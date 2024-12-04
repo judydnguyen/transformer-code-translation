@@ -82,6 +82,14 @@ ds = load_dataset("google/code_x_glue_cc_code_to_code_trans")
 
 ----------
 ### Critical Analysis
+- What is the impact of this project? 
+    - Enhanced Understanding of Code Context: Graph CodeBERT can reason about the logical and functional dependencies in code.
+    - Improved Accuracy in Downstream Tasks: code translation.
+    - Incorporating these structures can help Graph CodeBERT generalize its understanding across different programming languages.
+- What is the next step?
+    - Use benchmarks like CodeXGLUE to evaluate task performance (e.g., code summarization, bug detection, translation).
+    - Different model architectures: CodeBert, CodeT5, etc.
+    - Using semantic knowledges to develop evaluation metrics, and verification of the generated outputs.
 
 ----------
 ### Resource links
@@ -89,5 +97,7 @@ ds = load_dataset("google/code_x_glue_cc_code_to_code_trans")
 - Code:
 
 ### Code demonstration
-Our code demonstration with an interactive notebook is at (translation/code_demo_evalutate_model.ipynb)[translation/code_demo_evalutate_model.ipynb]
+Our code demonstration with an interactive notebook is at 
+
+[translation/code_demo_evalutate_model.ipynb](translation/code_demo_evalutate_model.ipynb)
 
