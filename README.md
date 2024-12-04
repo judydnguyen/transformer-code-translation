@@ -1,138 +1,93 @@
-# Code Pretraining Models
+## Semantic-enhanced Code Translation with Transformer-based Models
+------------
+*Authors: Dung (Judy) Nguyen, Samuel Sasaki* 
 
-This repo contains code pretraining models in the CodeBERT series from Microsoft, including six models as of June 2023.
-- CodeBERT (EMNLP 2020)
-- GraphCodeBERT (ICLR 2021)
-- UniXcoder (ACL 2022)
-- CodeReviewer (ESEC/FSE 2022)
-- CodeExecutor (ACL 2023)
-- LongCoder (ICML 2023)
+Email: {dung.t.nguyen, samuel.sasaki}@vanderbilt.edu
 
-# CodeBERT
+### Overview
+Pre-trained models for programming language have achieved dramatic empirical improvements on a variety of code-related tasks such as code search, code completion, code summarization, etc. 
+However, existing pre-trained models regard a code snippet as a sequence of tokens, while ignoring the inherent structure of code, which provides crucial code semantics and would enhance the code understanding process.
+> *A code snippet contains more than a sequence of tokens!!!*
 
-This repo provides the code for reproducing the experiments in [CodeBERT: A Pre-Trained Model for Programming and Natural Languages](https://arxiv.org/pdf/2002.08155.pdf). CodeBERT is a pre-trained model for programming language, which is a multi-programming-lingual model pre-trained on NL-PL pairs in 6 programming languages (Python, Java, JavaScript, PHP, Ruby, Go). 
 
-### Dependency
+#### GraphCodeBert
+**Key takeaways:**
+- GraphCodeBERT is the first pre-trained model
+that leverages semantic structure of code to learn code representation.
+- Introduce structure-aware pre-training tasks for learning representation from source code and data flow.
+- Provides significant improvement on four downstream tasks, i.e. code search, clone detection, code translation, and code refinement.
 
-- pip install torch
-- pip install transformers
+![Data Flow Graph](translation/assets/dfg_graphcodebert.png)
+*The procedure of extracting data flow given a source code. The graph in the rightmost is data flow that represents the relation of `where-the-value-comes-from` between variables.*
 
-### Quick Tour
-We use huggingface/transformers framework to train the model. You can use our model like the pre-trained Roberta base. Now, We give an example on how to load the model.
-```python
-import torch
-from transformers import RobertaTokenizer, RobertaConfig, RobertaModel
+![GraphCodeBert](translation/assets/graphcodebert_overall.png)
+*An illustration about GraphCodeBERT pre-training. The model takes source code paired with comment and the corresponding data flow as the input.*
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-tokenizer = RobertaTokenizer.from_pretrained("microsoft/codebert-base")
-model = RobertaModel.from_pretrained("microsoft/codebert-base")
-model.to(device)
+**Our contribution:**
+- Study the Transformer-based Models in code understanding task: Code Translation.
+- Observation: Using Data Control Flow Graph is efficient but still not enough.
+- Conclusion: Incoporating semantic information (Control Flow Graph) can help improve model performance.
+
+### Our Approach
+----------
+### Model card/dataset card
+- Base Model: ESM2 (Facebook Research)
+    - Architecture: Transformer-based protein language model
+Fine-tuning Dataset: AmyloGraph database
+Input: Protein sequences
+Output: Classification probabilities for three aggregation categories
+Performance Highlights:
+Strong performance in identifying faster aggregation cases (F1-score: 0.72)
+High precision for no-aggregation cases (0.82)
+Balanced performance across multiple metrics
+#### Model Card
+- Tokenizer:
+    - Source: Pretrained from Microsoft
+    - Summary: GraphCodeBERT consists of 12 layers, 768 dimensional hidden states, and 12 attention heads. The maximum sequence length for the model is 512. The model is trained on the CodeSearchNet dataset, which includes 2.3M functions with document pairs for six programming languages.
+    - Usage: 
+    ```
+    from transformers import AutoTokenizer, AutoModelForMaskedLM
+    tokenizer = AutoTokenizer.from_pretrained("microsoft/graphcodebert-base")
+    model = AutoModelForMaskedLM.from_pretrained("microsoft/graphcodebert-base")
+    ```
+- Build full model:
+    ```
+    encoder = model_class.from_pretrained(args.model_name_or_path,config=config)    
+    decoder_layer = nn.TransformerDecoderLayer(d_model=config.hidden_size, nhead=config.num_attention_heads)
+    decoder = nn.TransformerDecoder(decoder_layer, num_layers=6)
+    model=Seq2Seq(encoder=encoder,decoder=decoder,config=config,
+                    beam_size=args.beam_size,max_length=args.max_target_length,
+                    sos_id=tokenizer.cls_token_id,eos_id=tokenizer.sep_token_id)
+    ```
+
+#### Dataset Card: Java <-> C#
+- The dataset is collected from several public repos:
+    - Lucene (http://lucene.apache.org/)
+    - POI (http://poi.apache.org/)
+    - JGit (https://github.com/eclipse/jgit/)
+    - Antlr(https://github.com/antlr/).
+- Authors et al. GraphCodeBert collect both the Java and C# versions of the codes and find the parallel functions.
+- Source: from original paper (Google)/huggingface
+- Data statistic:
+
+    |               | Train  | Valid | Test  |
+    |---------------|--------|-------|-------|
+    | Number of Samples | 10,300 | 500   | 1,000 |
+- Usages:
+```
+from datasets import load_dataset
+
+ds = load_dataset("google/code_x_glue_cc_code_to_code_trans")
 ```
 
-### NL-PL Embeddings
+----------
+### Critical Analysis
 
-Here, we give an example to obtain embedding from CodeBERT.
+----------
+### Resource links
+- Papers:
+- Code:
 
-```python
->>> from transformers import AutoTokenizer, AutoModel
->>> import torch
->>> tokenizer = AutoTokenizer.from_pretrained("microsoft/codebert-base")
->>> model = AutoModel.from_pretrained("microsoft/codebert-base")
->>> nl_tokens=tokenizer.tokenize("return maximum value")
-['return', 'Ġmaximum', 'Ġvalue']
->>> code_tokens=tokenizer.tokenize("def max(a,b): if a>b: return a else return b")
-['def', 'Ġmax', '(', 'a', ',', 'b', '):', 'Ġif', 'Ġa', '>', 'b', ':', 'Ġreturn', 'Ġa', 'Ġelse', 'Ġreturn', 'Ġb']
->>> tokens=[tokenizer.cls_token]+nl_tokens+[tokenizer.sep_token]+code_tokens+[tokenizer.eos_token]
-['<s>', 'return', 'Ġmaximum', 'Ġvalue', '</s>', 'def', 'Ġmax', '(', 'a', ',', 'b', '):', 'Ġif', 'Ġa', '>', 'b', ':', 'Ġreturn', 'Ġa', 'Ġelse', 'Ġreturn', 'Ġb', '</s>']
->>> tokens_ids=tokenizer.convert_tokens_to_ids(tokens)
-[0, 30921, 4532, 923, 2, 9232, 19220, 1640, 102, 6, 428, 3256, 114, 10, 15698, 428, 35, 671, 10, 1493, 671, 741, 2]
->>> context_embeddings=model(torch.tensor(tokens_ids)[None,:])[0]
-torch.Size([1, 23, 768])
-tensor([[-0.1423,  0.3766,  0.0443,  ..., -0.2513, -0.3099,  0.3183],
-        [-0.5739,  0.1333,  0.2314,  ..., -0.1240, -0.1219,  0.2033],
-        [-0.1579,  0.1335,  0.0291,  ...,  0.2340, -0.8801,  0.6216],
-        ...,
-        [-0.4042,  0.2284,  0.5241,  ..., -0.2046, -0.2419,  0.7031],
-        [-0.3894,  0.4603,  0.4797,  ..., -0.3335, -0.6049,  0.4730],
-        [-0.1433,  0.3785,  0.0450,  ..., -0.2527, -0.3121,  0.3207]],
-       grad_fn=<SelectBackward>)
-```
+### Code demonstration
+Our code demonstration with an interactive notebook is at (translation/code_demo_evalutate_model.ipynb)[translation/code_demo_evalutate_model.ipynb]
 
-
-### Probing
-
-As stated in the paper, CodeBERT is not suitable for mask prediction task, while CodeBERT (MLM) is suitable for mask prediction task.
-
-
-We give an example on how to use CodeBERT(MLM) for mask prediction task.
-```python
-from transformers import RobertaConfig, RobertaTokenizer, RobertaForMaskedLM, pipeline
-
-model = RobertaForMaskedLM.from_pretrained("microsoft/codebert-base-mlm")
-tokenizer = RobertaTokenizer.from_pretrained("microsoft/codebert-base-mlm")
-
-CODE = "if (x is not None) <mask> (x>1)"
-fill_mask = pipeline('fill-mask', model=model, tokenizer=tokenizer)
-
-outputs = fill_mask(CODE)
-print(outputs)
-
-```
-Results
-```python
-'and', 'or', 'if', 'then', 'AND'
-```
-The detailed outputs are as follows:
-```python
-{'sequence': '<s> if (x is not None) and (x>1)</s>', 'score': 0.6049249172210693, 'token': 8}
-{'sequence': '<s> if (x is not None) or (x>1)</s>', 'score': 0.30680200457572937, 'token': 50}
-{'sequence': '<s> if (x is not None) if (x>1)</s>', 'score': 0.02133703976869583, 'token': 114}
-{'sequence': '<s> if (x is not None) then (x>1)</s>', 'score': 0.018607674166560173, 'token': 172}
-{'sequence': '<s> if (x is not None) AND (x>1)</s>', 'score': 0.007619690150022507, 'token': 4248}
-```
-
-### Downstream Tasks
-
-For Code Search and Code Documentation Generation tasks, please refer to the [CodeBERT](https://github.com/microsoft/CodeBERT/tree/master/CodeBERT) folder.
-
-
-
-# GraphCodeBERT
-
-This repo also provides the code for reproducing the experiments in [GraphCodeBERT: Pre-training Code Representations with Data Flow](https://openreview.net/pdf?id=jLoC4ez43PZ). GraphCodeBERT is a pre-trained model for programming language that considers the inherent structure of code i.e. data flow, which is a multi-programming-lingual model pre-trained on NL-PL pairs in 6 programming languages (Python, Java, JavaScript, PHP, Ruby, Go). 
-
-For downstream tasks like code search, clone detection, code refinement and code translation, please refer to the [GraphCodeBERT](https://github.com/microsoft/CodeBERT/tree/master/GraphCodeBERT) folder.
-
-# UniXcoder
-
-This repo will provide the code for reproducing the experiments in [UniXcoder: Unified Cross-Modal Pre-training for Code Representation](https://arxiv.org/pdf/2203.03850.pdf). UniXcoder is a unified cross-modal pre-trained model for programming languages to support both code-related understanding and generation tasks. 
-
-Please refer to the [UniXcoder](https://github.com/microsoft/CodeBERT/tree/master/UniXcoder) folder for tutorials and downstream tasks.
-
-# CodeReviewer
-
-This repo also provides the code for reproducing the experiments in [CodeReviewer: Pre-Training for Automating Code Review Activities](https://arxiv.org/abs/2203.09095). CodeReviewer is a model pre-trained with code change and code review data to support code review tasks.
-
-Please refer to the [CodeReviewer](https://github.com/microsoft/CodeBERT/tree/master/CodeReviewer) folder for tutorials and downstream tasks.
-
-# CodeExecutor
-
-This repo provides the code for reproducing the experiments in [Code Execution with Pre-trained Language Models](https://arxiv.org/pdf/2305.05383.pdf). CodeExecutor is a pre-trained model that learns to predict the execution traces using a code execution pre-training task and curriculum learning.
-
-Please refer to the [CodeExecutor](https://github.com/microsoft/CodeBERT/tree/master/CodeExecutor) folder for details.
-
-# LongCoder
-
-This repo will provide the code for reproducing the experiments on LCC datasets in [LongCoder: A Long-Range Pre-trained Language Model for Code Completion](https://arxiv.org/abs/2306.14893). LongCoder is a sparse and efficient pre-trained Transformer model for long code modeling.
-
-Please refer to the [LongCoder](https://github.com/microsoft/CodeBERT/tree/master/LongCoder) folder for details.
-## Contact
-
-Feel free to contact Daya Guo (guody5@mail2.sysu.edu.cn), Shuai Lu (shuailu@microsoft.com) and Nan Duan (nanduan@microsoft.com) if you have any further questions.
-
-## Contributing
-
-We appreciate all contributions and thank all the contributors!
-<p align="center">
-  <img src="https://contributors-img.web.app/image?repo=microsoft/CodeBERT" />
-</p>
