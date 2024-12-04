@@ -152,4 +152,6 @@ chmod +x ./run.sh && ./run.sh
 
 - Baseline result: BLEU: 74.2, X-Match: 59.2 (on testing set)
                  : BLEU: 74.2, X-Match: 60.2
+                 
 - New result:      BLEU: 76.68, X-Match: 61.2 (on testing set)
+                   BLEU: 78.74, X-Match: 62.6
