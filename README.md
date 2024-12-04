@@ -1,6 +1,7 @@
 ## Semantic-enhanced Code Translation with Transformer-based Models
 ------------
 *Authors: Dung (Judy) Nguyen, Samuel Sasaki* 
+
 Email: {dung.t.nguyen, samuel.sasaki}@vanderbilt.edu
 
 ### Overview
@@ -88,4 +89,5 @@ ds = load_dataset("google/code_x_glue_cc_code_to_code_trans")
 - Code:
 
 ### Code demonstration
+Our code demonstration with an interactive notebook is at (translation/code_demo_evalutate_model.ipynb)[translation/code_demo_evalutate_model.ipynb]
 
