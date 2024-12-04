@@ -2,11 +2,14 @@
 __pycache__/
 *.py[cod]
 *$py.class
-*tree-sitter*
+# *tree-sitter*
 **/saved_models
 **/wandb*
 **/data*
 *.bin
+
+GraphCodeBert/translation/*
+GraphCodeBERT/*
 
 # C extensions
 *.so
