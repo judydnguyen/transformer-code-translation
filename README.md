@@ -28,7 +28,39 @@ that leverages semantic structure of code to learn code representation.
 - Observation: Using Data Control Flow Graph is efficient but still not enough.
 - Conclusion: Incoporating semantic information (Control Flow Graph) can help improve model performance.
 
+----------
 ### Our Approach
+- Adding information of Control Flow Graph (CFG) to the source tokens
+- Adding the attention masks to guide the model to focus on the starting of each control block, i.e., where the `IF` starts, etc.
+
+    *An Example of DFG*
+    ![Preview](./translation/assets/example_dfg.png)
+
+- Formal Pseudocode:
+    ```
+    # Process CFG edges and update source tokens
+    For each (source, dest) in CFG:
+        If adding 2 tokens exceeds max source length:
+            Skip this edge
+        Append tokens for source and dest to source_tokens
+        Append corresponding position indices to position_idx
+        Append unknown token IDs to source_ids
+        Update cfg_to_code: mapping from tokens to code
+
+    # Setup attention mask
+    For each (a, b) pair in cfg_to_code:
+        Enable attention between CFG nodes and their associated code spans:
+            attn_mask[node_index + current_index, a:b] = True
+            attn_mask[a:b, node_index + current_index] = True
+
+    ```
+- Our quantitative results:
+
+    | Method         |   BLEU    | Acc (100%) |
+    | -------------- | :-------: | :--------: |
+    | GraphCodeBERT  | **76.68** |  **61.2**  |
+    | GraphCodeBERT+CFG  | **78.74** |  **62.6**  |
+
 ----------
 ### Model card/dataset card
 - Base Model: ESM2 (Facebook Research)
@@ -94,10 +126,19 @@ ds = load_dataset("google/code_x_glue_cc_code_to_code_trans")
 ----------
 ### Resource links
 - Papers:
-- Code:
+    - [GRAPHCODEBERT: PRE-TRAINING CODE REPRESENTATIONS WITH DATA FLOW](https://openreview.net/pdf?id=jLoC4ez43PZ)
+    - [CodeXGLUE: A Machine Learning Benchmark Dataset for Code Understanding and Generation](https://arxiv.org/pdf/2102.04664)
+    - 
 
+- Code:
+    - [CodeXGLUE](https://github.com/microsoft/CodeXGLUE)
+    - 
+----------
 ### Code demonstration
 Our code demonstration with an interactive notebook is at 
 
 [translation/code_demo_evalutate_model.ipynb](translation/code_demo_evalutate_model.ipynb)
+
+----------
+### Interactive Demo
 
