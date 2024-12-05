@@ -119,11 +119,10 @@ ds = load_dataset("google/code_x_glue_cc_code_to_code_trans")
 - Papers:
     - [GRAPHCODEBERT: PRE-TRAINING CODE REPRESENTATIONS WITH DATA FLOW](https://openreview.net/pdf?id=jLoC4ez43PZ)
     - [CodeXGLUE: A Machine Learning Benchmark Dataset for Code Understanding and Generation](https://arxiv.org/pdf/2102.04664)
-    - 
-
+    - [StructCoder: Structure-Aware Transformer for Code Generation](StructCoder: Structure-Aware Transformer for Code Generation)
 - Code:
     - [CodeXGLUE](https://github.com/microsoft/CodeXGLUE)
-    - 
+    - [CodeBERT](https://github.com/microsoft/CodeBERT)
 ----------
 ### Code demonstration
 Our code demonstration with an interactive notebook is at 
