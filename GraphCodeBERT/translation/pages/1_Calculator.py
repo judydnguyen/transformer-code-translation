@@ -27,6 +27,8 @@ from transformers import (WEIGHTS_NAME, AdamW, get_linear_schedule_with_warmup,
 
 import inspect
 
+from code_editor import code_editor
+
 
 # GLOBAL VARIABLES
 source="java"
@@ -139,52 +141,114 @@ model.eval()
 
 # print(inspect.signature(model.forward))
 
-java_body = """
-public static long factorial(int n) { 
-    if (n <= 1) { return 1; } return n * factorial(n - 1); 
-}
-"""
-
-# Tokenize the input
-source_ids = tokenizer.encode(java_body, return_tensors="pt", truncation=True, max_length=512).to('cpu')
-source_mask = source_ids.ne(tokenizer.pad_token_id).to('cpu')  # Boolean mask
-position_idx = torch.arange(0, source_ids.size(1), dtype=torch.long).unsqueeze(0).to('cpu')  # Positional indices
-attn_mask = source_mask.clone()  # Copy the same mask if no special processing is required
-
-# Perform inference
-with torch.no_grad():
-    outputs = model(
-        source_ids=source_ids,
-        source_mask=source_mask,
-        position_idx=position_idx,
-        attn_mask=attn_mask
-    )
-
-# Decode the output
-generated_ids = outputs[0]  # Assuming the first output contains generated token IDs
-translated_code = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
-
 print("Finished loading the model!")
+
+def model_infer(sample_code):
+    """Use the code translation model
+
+    :param sample_code: source code chunk
+    :type sample_code: string
+    :return: target code chunk
+    :rtype: string
+    """
+    # Tokenize the input
+    source_ids = tokenizer.encode(java_code, return_tensors="pt", truncation=True, max_length=512).to('cpu')
+    source_mask = source_ids.ne(tokenizer.pad_token_id).to('cpu')  # Boolean mask
+    position_idx = torch.arange(0, source_ids.size(1), dtype=torch.long).unsqueeze(0).to('cpu')  # Positional indices
+    attn_mask = source_mask.clone()  # Copy the same mask if no special processing is required
+
+    # Perform inference
+    with torch.no_grad():
+        outputs = model(
+            source_ids=source_ids,
+            source_mask=source_mask,
+            position_idx=position_idx,
+            attn_mask=attn_mask
+        )
+
+    # Decode the output
+    generated_ids = outputs[0]  # Assuming the first output contains generated token IDs
+    translated_code = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
+
+    return translated_code
 
 ####################
 ## STREAMLIT DEMO ##
 ####################
 
-st.title("Code Translation Demo")
+# This is the code chunk we will use...
+#
+# java_body = """
+#   public class Calculator {
+#       public static int add(int a, int b) {
+#           return a + b;    
+#       }
+# } 
+# """
 
-st.text("We demonstrate the ability of the model to translate a chunk of Java code to C# using an abstract syntax tree to augment the translation.")
+# Inject custom CSS
+st.markdown(
+    """
+    <style>
+    .custom-text {
+        font-size: 20px;
+        border-radius: 5px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
-st.header("Java Code")
+# Use the custom CSS class
+st.markdown('<div class="custom-text">We will start with a simple example: computing the sum of two integers.</div>', unsafe_allow_html=True)
+st.markdown('')
 
-st.code(java_body, language="java")
+st.header("Source Java Code")
 
-st.header("C# Code")
+# Add a button with text: 'Save'
+custom_btns = [{"name": "Save", "hasText": True, "alwaysOn": True, "commands": ["submit"], "style": {"top": "0.46rem", "right": "0.4rem"}}]
 
-cs_body = """
-    public static long Factorial(int n) => n <= 1 ? 1 : n * Factorial(n - 1);
-"""
-st.code(cs_body, language="csharp")
+# Set up a code editor for the user to add code
+code_input = code_editor(
+    "// Write your Java code here", 
+    lang="java",
+    height=10,
+    buttons=custom_btns
+)
 
-st.header("Predicted C# Code")
-st.code(translated_code, language="csharp")
+# Retrieve the Java code from the code editor
+java_code = code_input["text"]
 
+st.header("Translated C# Code")
+
+# Button to process the input code
+if st.button("Translate"):
+    # Call the function and save the output
+    output = model_infer(java_code)
+    
+    # Display the prediction
+    code_output = code_editor(
+        output, 
+        lang="csharp",
+        height=10,
+    )   
+
+    # Add the expected code
+    st.header("Target C# Code")
+    expected_code_output = code_editor(
+        "public class Calculator { public static int Add(int a, int b) { return a + b; } }", lang="csharp"
+    )
+
+#
+# If you want to verify, plug this snippet into:
+# https://codapi.org/csharp/ to run it.
+# 
+# using System;
+#
+# // static long Factorial(int n) => n <= 1 ? 1 : n * Factorial(n - 1);
+# static long Factorial(int n){if (n <= 1){return 1;}return n * Factorial(n - 1);}
+#
+# long output = Factorial(3);
+#
+# Console.WriteLine(output);
+#
