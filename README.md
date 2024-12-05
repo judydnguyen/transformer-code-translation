@@ -63,15 +63,6 @@ that leverages semantic structure of code to learn code representation.
 
 ----------
 ### Model card/dataset card
-- Base Model: ESM2 (Facebook Research)
-    - Architecture: Transformer-based protein language model
-Fine-tuning Dataset: AmyloGraph database
-Input: Protein sequences
-Output: Classification probabilities for three aggregation categories
-Performance Highlights:
-Strong performance in identifying faster aggregation cases (F1-score: 0.72)
-High precision for no-aggregation cases (0.82)
-Balanced performance across multiple metrics
 #### Model Card
 - Tokenizer:
     - Source: Pretrained from Microsoft
