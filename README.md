@@ -68,13 +68,13 @@ that leverages semantic structure of code to learn code representation.
     - Source: Pretrained from Microsoft
     - Summary: GraphCodeBERT consists of 12 layers, 768 dimensional hidden states, and 12 attention heads. The maximum sequence length for the model is 512. The model is trained on the CodeSearchNet dataset, which includes 2.3M functions with document pairs for six programming languages.
     - Usage: 
-    ```
+    ```python
     from transformers import AutoTokenizer, AutoModelForMaskedLM
     tokenizer = AutoTokenizer.from_pretrained("microsoft/graphcodebert-base")
     model = AutoModelForMaskedLM.from_pretrained("microsoft/graphcodebert-base")
     ```
 - Build full model:
-    ```
+    ```pythonn
     encoder = model_class.from_pretrained(args.model_name_or_path,config=config)    
     decoder_layer = nn.TransformerDecoderLayer(d_model=config.hidden_size, nhead=config.num_attention_heads)
     decoder = nn.TransformerDecoder(decoder_layer, num_layers=6)
@@ -97,7 +97,7 @@ that leverages semantic structure of code to learn code representation.
     |---------------|--------|-------|-------|
     | Number of Samples | 10,300 | 500   | 1,000 |
 - Usages:
-```
+```python
 from datasets import load_dataset
 
 ds = load_dataset("google/code_x_glue_cc_code_to_code_trans")
