@@ -60,7 +60,18 @@ that leverages semantic structure of code to learn code representation.
     | -------------- | :-------: | :--------: |
     | GraphCodeBERT  | **76.68** |  **61.2**  |
     | GraphCodeBERT+CFG  | **78.74** |  **62.6**  |
+- Examples
+    ```Java
+    // Source -->
+    public static string GetDay(int day) { switch (day) { case 1: return "Monday"; case 2: return "Tuesday"; default: return "Invalid"; } }
+    ```
+    ```CS
+    // Baseline -->
+    public static string GetDay(int date){switch (this){case 1:return "Monday";case 2:return "Monday";case 2:return "Monday";}}
 
+    // Ours -->
+    public static string GetDay(int day){switch (day){case 1:return "Monday";case 2:return "Sunday";default:return "Invalid";}}'
+    ```
 ----------
 ### Model card/dataset card
 #### Model Card
@@ -74,7 +85,7 @@ that leverages semantic structure of code to learn code representation.
     model = AutoModelForMaskedLM.from_pretrained("microsoft/graphcodebert-base")
     ```
 - Build full model:
-    ```pythonn
+    ```python
     encoder = model_class.from_pretrained(args.model_name_or_path,config=config)    
     decoder_layer = nn.TransformerDecoderLayer(d_model=config.hidden_size, nhead=config.num_attention_heads)
     decoder = nn.TransformerDecoder(decoder_layer, num_layers=6)
@@ -119,11 +130,10 @@ ds = load_dataset("google/code_x_glue_cc_code_to_code_trans")
 - Papers:
     - [GRAPHCODEBERT: PRE-TRAINING CODE REPRESENTATIONS WITH DATA FLOW](https://openreview.net/pdf?id=jLoC4ez43PZ)
     - [CodeXGLUE: A Machine Learning Benchmark Dataset for Code Understanding and Generation](https://arxiv.org/pdf/2102.04664)
-    - 
-
+    - [StructCoder: Structure-Aware Transformer for Code Generation](StructCoder: Structure-Aware Transformer for Code Generation)
 - Code:
     - [CodeXGLUE](https://github.com/microsoft/CodeXGLUE)
-    - 
+    - [CodeBERT](https://github.com/microsoft/CodeBERT)
 ----------
 ### Code demonstration
 Our code demonstration with an interactive notebook is at 
