@@ -146,6 +146,8 @@ ds = load_dataset("google/code_x_glue_cc_code_to_code_trans")
   - Use benchmarks like CodeXGLUE to evaluate task performance (e.g., code summarization, bug detection, translation).
   - Different model architectures: CodeBert, CodeT5, etc.
   - Using semantic knowledges to develop evaluation metrics, and verification of the generated outputs.
+  - Doing dynamic analysis by capturing runtime information about the code to augment the translation process as opposed to static information (ASTs, control flow graphs).
+  - Looking at different representations and get a deeper understanding of the kinds of structure in them that helps the model the most.
 
 ---
 
