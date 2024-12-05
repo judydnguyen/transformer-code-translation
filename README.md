@@ -118,7 +118,7 @@ _An illustration about GraphCodeBERT pre-training. The model takes source code p
   - POI (http://poi.apache.org/)
   - JGit (https://github.com/eclipse/jgit/)
   - Antlr(https://github.com/antlr/).
-- Authors et al. GraphCodeBert collect both the Java and C# versions of the codes and find the parallel functions.
+- Guo et al. GraphCodeBert collect both the Java and C# versions of the codes and find the parallel functions.
 - Source: from original paper (Google)/huggingface
 - Data statistic:
 
