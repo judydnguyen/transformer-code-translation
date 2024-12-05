@@ -171,9 +171,10 @@ Our code demonstration with an interactive notebook is at
 
 ### Interactive Demo
 
-To run the interactive demo, please ensure that all dependencies are installed and start the demo by running the following commands from the root of the repository.
+To run the interactive demo, please ensure that all dependencies are installed and start the demo by running the following commands starting in the root of the repository.
 
 ```bash
+cd translation/
 # start a virtual environment
 python3 -m venv venv
 source venv/bin/activate # if on macOS
